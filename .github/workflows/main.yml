@@ -6,6 +6,11 @@
 name: Symfony App CI
 
 on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'CHANGELOG.md'
   pull_request:
     branches:
       - master
@@ -46,3 +51,54 @@ jobs:
       env:
         DATABASE_URL: sqlite:///%kernel.project_dir%/data/database.sqlite
       run: vendor/bin/phpunit
+  update-changelog:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    needs: [symfony-unit-tests]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Verify version format and check tag existence
+      run: |
+        version=$(cat version.txt | tr -d '\n')
+        # Verify version format
+        if ! [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "Version $version does not follow the x.y.z format."
+          exit 1
+        fi
+        # Check if the version exists as a tag
+        if gh api repos/:owner/:repo/git/ref/tags/$version; then
+          echo "Version $version already exists as a tag in the repository."
+          exit 1
+        else
+          echo "Version $version is valid and does not exist as a tag."
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update CHANGELOG.md with commits
+      run: |
+        git log --pretty=format:'###### * %h %s' $(git describe --tags $(git rev-list --tags --max-count=1))...HEAD --no-merges | cat - CHANGELOG.md > temp && mv temp CHANGELOG.md
+
+    - name: Add release title to CHANGELOG.md
+      run: |
+        echo "\n# Release v$(cat version.txt | tr -d '\n')\n" | cat - CHANGELOG.md > temp && mv temp CHANGELOG.md
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add CHANGELOG.md
+        git commit -m "Update CHANGELOG.md with v$(cat version.txt | tr -d '\n') changes"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create and push tag
+      run: |
+        version=$(cat version.txt | tr -d '\n')
+        git tag -a $version -m "Release $version"
+        git push origin $version
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

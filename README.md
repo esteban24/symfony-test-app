@@ -25,3 +25,9 @@ $ vendor/bin/phpunit
 ```
 
 ## Versioning
+
+For versioning just update `version.txt` before merging to `master` branch. 
+
+## Changelog
+
+You can check the latest changes in the [CHANGELOG.md](CHANGELOG.md) file
