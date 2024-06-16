@@ -14,6 +14,6 @@ class DefaultControllerTest extends WebTestCase {
         // Assert that the response is successful
         $this->assertResponseIsSuccessful();
 
-        $this->assertSelectorTextContains('h1', 'Hello, Symfony!');
+        $this->assertSelectorTextContains('h1', 'Hello, My new app!');
     }
 }
