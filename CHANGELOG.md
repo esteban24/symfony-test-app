@@ -1,4 +1,10 @@
-\n\n# Release v0.0.2\n
+
+
+# Release v0.0.2
+
+###### * 878ee87 feat: updated workflows and versioning files
+###### * 45c9d57 feature: updated default controller test
+###### * 8cc15b5 feature: updated index twig, removed example base twig\n\n# Release v0.0.2\n
 ###### * bd3fae9 feat: updated workflows and versioning files
 ###### * 45c9d57 feature: updated default controller test
 ###### * 8cc15b5 feature: updated index twig, removed example base twig
