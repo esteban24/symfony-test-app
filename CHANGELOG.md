@@ -1,5 +1,10 @@
 
 
+# Release v0.0.3
+
+###### * 7aa7b07 feat: upgraded to 0.0.3
+###### * 58d32f1 feat: added docker env for building nginx and sonar locally
+
 # Release v0.0.2
 
 ###### * 878ee87 feat: updated workflows and versioning files
