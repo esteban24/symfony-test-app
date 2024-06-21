@@ -1,0 +1,19 @@
+FROM sonarsource/sonar-scanner-cli:latest
+
+# Temporarily switch to root to install packages
+USER root
+
+# Install curl to check SonarQube readiness
+RUN apk add --no-cache curl
+
+# Copy the wait-for-sonarqube.sh script
+COPY ./scripts/sonar/wait-for-sonarqube.sh /usr/bin/wait-for-sonarqube.sh
+
+
+# Make the script executable
+RUN chmod +x /usr/bin/wait-for-sonarqube.sh
+
+USER scanner-cli
+
+# Set the entrypoint to the wait script
+ENTRYPOINT ["/usr/bin/wait-for-sonarqube.sh"]

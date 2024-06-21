@@ -1,0 +1,16 @@
+FROM sonarqube:community
+
+# Copy your custom scripts
+COPY ./scripts/sonar/change_default_password.sh /change_default_password.sh
+COPY ./scripts/sonar/entrypoint.sh /custom-entrypoint.sh
+
+USER root
+
+# Make sure the script is executable
+RUN chmod +x /change_default_password.sh
+RUN chmod +x /custom-entrypoint.sh
+
+USER sonarqube
+
+# Set the entrypoint script
+ENTRYPOINT ["/custom-entrypoint.sh"]
