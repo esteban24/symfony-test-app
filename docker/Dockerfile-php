@@ -1,0 +1,62 @@
+# Use PHP 8.2 FPM as the base image
+FROM php:8.2-fpm
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    zlib1g-dev \
+    libxml2-dev \
+    libpng-dev \
+    libzip-dev \
+    vim \
+    curl \
+    debconf \
+    subversion \
+    apt-transport-https \
+    apt-utils \
+    build-essential \
+    locales \
+    acl \
+    mailutils \
+    wget \
+    nodejs \
+    zip \
+    unzip \
+    gnupg \
+    gnupg1 \
+    gnupg2 \
+    sudo \
+    ssh \
+    && docker-php-ext-install \
+    pdo_mysql \
+    soap \
+    zip \
+    opcache \
+    gd \
+    intl
+
+# Copy configuration files
+COPY build/php/opcache.ini /usr/local/etc/php/conf.d/
+COPY build/php/custom.ini /usr/local/etc/php/conf.d/
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php && \
+    mv composer.phar /usr/local/bin/composer && \
+    composer self-update 1.9.0
+
+# Install PHPUnit
+RUN wget --no-check-certificate https://phar.phpunit.de/phpunit-6.5.3.phar && \
+    mv phpunit*.phar phpunit.phar && \
+    chmod +x phpunit.phar && \
+    mv phpunit.phar /usr/local/bin/phpunit
+
+# Configure user permissions
+RUN usermod -u 1000 www-data && \
+    usermod -a -G www-data root && \
+    mkdir -p /var/www && \
+    chown -R www-data:www-data /var/www && \
+    mkdir -p /var/www/.composer && \
+    chown -R www-data:www-data /var/www/.composer
+
+# Set working directory
+WORKDIR /var/www/project/

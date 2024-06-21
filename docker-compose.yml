@@ -1,0 +1,85 @@
+services:
+  nginx:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile-nginx
+    volumes:
+      - ./:/var/www/project/:cached
+    ports:
+      - 10302:80
+    networks:
+      - symfony
+  fpm:
+    build: # Info to build the Docker image
+      context: ./docker
+      dockerfile: Dockerfile-php # Specify the name of the Dockerfile
+    environment: # You can use this section to set environment variables. But you can also use the .env file.
+      - DATABASE_URL=mysql://root:root@db/docker_sf
+    volumes:
+      - ./:/var/www/project/:cached # Location of the project for php-fpm. Note this should be the same for NGINX.*
+    networks:
+      - symfony # Docker containers (services) that need to connect to each other should be on the same network.
+  app-db: #address
+    image: mariadb:10.2.29
+    ports:
+      - "3317:3306" #outside:inside docker container from-within
+    environment:
+      - MYSQL_DATABASE=docker_sf
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./docker/volumes:/var/lib/mysql
+      - ./docker/build/db/:/docker-entrypoint-initdb.d/
+    networks:
+      - symfony
+  sonarqube:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile-sonar
+    depends_on:
+      - sonar-db
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonar-db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONARQUBE_UI_PASSWORD: ${SONARQUBE_PASSWORD}
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    ports:
+      - "9000:9000"
+    networks:
+      - symfony # Docker containers (services) that need to connect to each other should be on the same network.
+  sonar-scanner-cli:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile-sonar-scanner-cli
+    depends_on:
+      - sonarqube
+    environment:
+      - SONARQUBE_URL=${SONARQUBE_URL}
+      - SONARQUBE_USERNAME=${SONARQUBE_USERNAME}
+      - SONARQUBE_PASSWORD=${SONARQUBE_PASSWORD}
+    volumes:
+      - .:/usr/src
+    networks:
+      - symfony # Docker containers (services) that need to connect to each other should be on the same network.
+  sonar-db:
+    image: postgres:12
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - symfony # Docker containers (services) that need to connect to each other should be on the same network.
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  postgresql:
+  postgresql_data:
+networks:
+  symfony:
+  
